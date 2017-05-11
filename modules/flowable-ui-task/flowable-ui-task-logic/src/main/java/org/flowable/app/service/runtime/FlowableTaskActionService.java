@@ -12,9 +12,15 @@
  */
 package org.flowable.app.service.runtime;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
+import javax.activation.DataSource;
+
+import org.apache.commons.mail.Email;
+import org.apache.commons.mail.EmailException;
 import org.flowable.app.model.common.UserRepresentation;
 import org.flowable.app.model.runtime.TaskRepresentation;
 import org.flowable.app.security.SecurityUtils;
@@ -22,7 +28,10 @@ import org.flowable.app.service.api.UserCache.CachedUser;
 import org.flowable.app.service.exception.BadRequestException;
 import org.flowable.app.service.exception.NotFoundException;
 import org.flowable.app.service.exception.NotPermittedException;
+import org.flowable.app.service.mail.HtmlNotificationMailTemplate;
+import org.flowable.app.service.mail.NotificationEmail;
 import org.flowable.engine.common.api.FlowableException;
+import org.flowable.engine.delegate.Expression;
 import org.flowable.engine.history.HistoricIdentityLink;
 import org.flowable.engine.task.IdentityLink;
 import org.flowable.engine.task.IdentityLinkType;
@@ -44,7 +53,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class FlowableTaskActionService extends FlowableAbstractTaskService {
 
     private static final Logger logger = LoggerFactory.getLogger(FlowableTaskActionService.class);
-
+    protected NotificationEmail notificationEmail=new NotificationEmail();
+    
+    
     public void completeTask(String taskId) {
         User currentUser = SecurityUtils.getCurrentUserObject();
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
@@ -87,7 +98,10 @@ public class FlowableTaskActionService extends FlowableAbstractTaskService {
                 throw new BadRequestException("Invalid assignee id");
             }
             assignTask(currentUser, task, assigneeIdString);
-
+            
+            ////Se asigno una nueva tarea se debe notificar por correo
+            notificationEmail.sendNotificationEmail(cachedUser.getUser().getEmail(),"asuarezr@monex.com.mx","alfred0823@hotmail.com",null,"Workflow-Te asiganrón una tarea",null,new HtmlNotificationMailTemplate().getNotificationTemplate(),"UTF-8",null);
+            
         } else {
             throw new BadRequestException("Assignee is required");
         }
@@ -238,4 +252,5 @@ public class FlowableTaskActionService extends FlowableAbstractTaskService {
         }
         return result;
     }
+    
 }

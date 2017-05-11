@@ -263,7 +263,8 @@ public class MailActivityBehavior extends AbstractBpmnActivityBehavior {
 
                 email.setSSLOnConnect(mailServerInfo.isMailServerUseSSL());
                 email.setStartTLSEnabled(mailServerInfo.isMailServerUseTLS());
-
+                email.setStartTLSRequired(mailServerInfo.isMailServerUseTLS());
+                
                 String user = mailServerInfo.getMailServerUsername();
                 String password = mailServerInfo.getMailServerPassword();
                 if (user != null && password != null) {
