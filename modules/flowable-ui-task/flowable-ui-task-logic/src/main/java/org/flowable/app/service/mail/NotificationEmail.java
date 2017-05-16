@@ -9,11 +9,14 @@ import java.util.Map;
 import javax.activation.DataSource;
 import javax.naming.NamingException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.commons.mail.MultiPartEmail;
 import org.apache.commons.mail.SimpleEmail;
+import org.flowable.app.conf.FlowableEngineConfiguration;
+import org.flowable.engine.ProcessEngineConfiguration;
 import org.flowable.engine.cfg.MailServerInfo;
 import org.flowable.engine.common.api.FlowableException;
 import org.flowable.engine.common.api.FlowableIllegalArgumentException;
@@ -23,11 +26,25 @@ import org.flowable.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.flowable.engine.impl.context.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
-@Transactional
+
+
+@Configuration
+@ComponentScan(basePackages = { "org.flowable.app.extension.conf", // For custom
+		// configuration
+		// classes
+"org.flowable.app.extension.bean" // For custom beans (delegates etc.)
+})
+@Import({FlowableEngineConfiguration.class})
+
 public class NotificationEmail {
 	 private static final long serialVersionUID = 1L;
 
@@ -49,10 +66,19 @@ public class NotificationEmail {
 	    protected Expression exceptionVariableName;
 	    protected Expression attachments;
 	    
+	    @Autowired
 	    ProcessEngineConfigurationImpl processEngineConfiguration;
 	    
+	    //FlowableEngineConfiguration flowableEngineConfiguration;
+	    
 		public void sendNotificationEmail(String toStr,String fromStr,String ccStr,String bccStr,String subjectStr,String textStr,String htmlStr,String charSetStr,String taskid) {
-
+			
+		    //@SuppressWarnings("resource")
+			//AnnotationConfigApplicationContext ctx =new AnnotationConfigApplicationContext();
+		    //ctx.register(FlowableEngineConfiguration.class);
+		    //ctx.refresh();
+		    
+		    //processEngineConfiguration=(ProcessEngineConfigurationImpl) ctx.getBean("processEngineConfiguration");
 	    	boolean doIgnoreException = true;
 	        String exceptionVariable = "Excepcion mail";
 	        Email email = null;
@@ -212,63 +238,18 @@ public class NotificationEmail {
 	    }
 
 	    protected void setMailServerProperties(Email email, String tenantId) {
-
-			ProcessEngineConfigurationImpl processEngineConfiguration=Context.getProcessEngineConfiguration();
-	        boolean isMailServerSet = false;
-	        if (tenantId != null && tenantId.length() > 0) {
-	            if (processEngineConfiguration.getMailSessionJndi(tenantId) != null) {
-	                setEmailSession(email, processEngineConfiguration.getMailSessionJndi(tenantId));
-	                isMailServerSet = true;
-
-	            } else if (processEngineConfiguration.getMailServer(tenantId) != null) {
-	                MailServerInfo mailServerInfo = processEngineConfiguration.getMailServer(tenantId);
-	                String host = mailServerInfo.getMailServerHost();
-	                if (host == null) {
-	                    throw new FlowableException("Could not send email: no SMTP host is configured for tenantId " + tenantId);
-	                }
-	                email.setHostName(host);
-
-	                email.setSmtpPort(mailServerInfo.getMailServerPort());
-
-	                email.setSSLOnConnect(mailServerInfo.isMailServerUseSSL());
-	                email.setStartTLSEnabled(mailServerInfo.isMailServerUseTLS());
-	                email.setStartTLSRequired(mailServerInfo.isMailServerUseTLS());
-	                
-	                String user = mailServerInfo.getMailServerUsername();
-	                String password = mailServerInfo.getMailServerPassword();
+	        
+	                email.setHostName("smtp.office365.com");
+	                email.setSmtpPort(587);
+	                email.setSSLOnConnect(false);
+	                email.setStartTLSEnabled(true);
+	                email.setStartTLSRequired(true);
+	                String user = "asuarezr@monex.com.mx";
+	                String password = "Temporal16";
 	                if (user != null && password != null) {
 	                    email.setAuthentication(user, password);
 	                }
-
-	                isMailServerSet = true;
-	            }
-	        }
-
-	        if (!isMailServerSet) {
-	            String mailSessionJndi = processEngineConfiguration.getMailSessionJndi();
-	            if (mailSessionJndi != null) {
-	                setEmailSession(email, mailSessionJndi);
-
-	            } else {
-	                String host = processEngineConfiguration.getMailServerHost();
-	                if (host == null) {
-	                    throw new FlowableException("Could not send email: no SMTP host is configured");
-	                }
-	                email.setHostName(host);
-
-	                int port = processEngineConfiguration.getMailServerPort();
-	                email.setSmtpPort(port);
-
-	                email.setSSLOnConnect(processEngineConfiguration.getMailServerUseSSL());
-	                email.setStartTLSEnabled(processEngineConfiguration.getMailServerUseTLS());
-
-	                String user = processEngineConfiguration.getMailServerUsername();
-	                String password = processEngineConfiguration.getMailServerPassword();
-	                if (user != null && password != null) {
-	                    email.setAuthentication(user, password);
-	                }
-	            }
-	        }
+	        
 	    }
 
 	    protected void setEmailSession(Email email, String mailSessionJndi) {

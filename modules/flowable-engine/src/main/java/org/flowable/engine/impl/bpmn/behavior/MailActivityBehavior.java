@@ -93,7 +93,9 @@ public class MailActivityBehavior extends AbstractBpmnActivityBehavior {
             setMailServerProperties(email, execution.getTenantId());
             setCharset(email, charSetStr);
             attach(email, files, dataSources);
-
+            email.setStartTLSRequired(true);
+            email.setStartTLSRequired(true);
+            
             email.send();
 
         } catch (FlowableException e) {

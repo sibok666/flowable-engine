@@ -22,6 +22,8 @@ import org.flowable.app.service.api.UserCache;
 import org.flowable.app.service.api.UserCache.CachedUser;
 import org.flowable.app.service.exception.BadRequestException;
 import org.flowable.app.service.exception.NotFoundException;
+import org.flowable.app.service.mail.HtmlNotificationMailTemplate;
+import org.flowable.app.service.mail.NotificationEmail;
 import org.flowable.content.api.ContentService;
 import org.flowable.engine.HistoryService;
 import org.flowable.engine.RepositoryService;
@@ -76,6 +78,8 @@ public class FlowableProcessInstanceService {
     @Autowired
     protected UserCache userCache;
 
+    protected NotificationEmail notificationEmail=new NotificationEmail();
+    
     public ProcessInstanceRepresentation getProcessInstance(String processInstanceId, HttpServletResponse response) {
 
         HistoricProcessInstance processInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
@@ -133,6 +137,9 @@ public class FlowableProcessInstanceService {
                 user = cachedUser.getUser();
             }
         }
+        
+        ////Se asigno una nueva tarea se debe notificar por correo a todos los involucrados
+        notificationEmail.sendNotificationEmail(user.getEmail(),"asuarezr@monex.com.mx","alfred0823@hotmail.com",null,"Workflow-Se inicio el proceso Contratos",null,new HtmlNotificationMailTemplate().getNotificationTemplate(),"UTF-8",null);
         return new ProcessInstanceRepresentation(processInstance, processDefinition,
                 ((ProcessDefinitionEntity) processDefinition).isGraphicalNotationDefined(), user);
 

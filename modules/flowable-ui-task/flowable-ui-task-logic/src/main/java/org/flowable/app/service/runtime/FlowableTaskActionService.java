@@ -72,6 +72,8 @@ public class FlowableTaskActionService extends FlowableAbstractTaskService {
 
         try {
             taskService.complete(task.getId());
+            ////Se asigno una nueva tarea se debe notificar por correo
+            notificationEmail.sendNotificationEmail(currentUser.getEmail(),"asuarezr@monex.com.mx","alfred0823@hotmail.com",null,"Workflow-La tarea "+task.getDescription()+" ha sido completada con éxito",null,new HtmlNotificationMailTemplate().getNotificationTemplate(),"UTF-8",null);
         } catch (FlowableException e) {
             logger.error("Error completing task {}", taskId, e);
             throw new BadRequestException("Task " + taskId + " can't be completed", e);
@@ -133,6 +135,9 @@ public class FlowableTaskActionService extends FlowableAbstractTaskService {
             }
             taskService.addUserIdentityLink(taskId, userId, IdentityLinkType.PARTICIPANT);
 
+            ////Se invito a participar en una tarea
+            notificationEmail.sendNotificationEmail(user.getUser().getEmail(),"asuarezr@monex.com.mx","alfred0823@hotmail.com",null,"Workflow-Te invitaron a participar en una tarea",null,new HtmlNotificationMailTemplate().getInvolveIntask(),"UTF-8",null);
+            
         } else {
             throw new BadRequestException("User id is required");
         }
@@ -181,6 +186,8 @@ public class FlowableTaskActionService extends FlowableAbstractTaskService {
 
         try {
             taskService.claim(task.getId(), String.valueOf(currentUser.getId()));
+            ////Se asigno una nueva tarea se debe notificar por correo
+            notificationEmail.sendNotificationEmail(currentUser.getEmail(),"asuarezr@monex.com.mx","alfred0823@hotmail.com",null,"Workflow-Reclamaste una tarea como tuya",null,new HtmlNotificationMailTemplate().getNotificationTemplate(),"UTF-8",null);
         } catch (FlowableException e) {
             throw new BadRequestException("Task " + taskId + " can't be claimed", e);
         }
@@ -209,6 +216,9 @@ public class FlowableTaskActionService extends FlowableAbstractTaskService {
             // If the current user wasn't part of the involved users yet, make it so
             String currentUserIdString = String.valueOf(currentUser.getId());
             addIdentiyLinkForUser(task, currentUserIdString, IdentityLinkType.PARTICIPANT);
+            
+            ////Se asigno una nueva tarea se debe notificar por correo
+            notificationEmail.sendNotificationEmail(currentUser.getEmail(),"asuarezr@monex.com.mx","alfred0823@hotmail.com",null,"Workflow-Has sido asignado a una tarea",null,new HtmlNotificationMailTemplate().getNotificationTemplate(),"UTF-8",null);
 
         } catch (FlowableException e) {
             throw new BadRequestException("Task " + task.getId() + " can't be assigned", e);

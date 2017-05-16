@@ -24,6 +24,8 @@ import org.flowable.app.model.runtime.TaskUpdateRepresentation;
 import org.flowable.app.security.SecurityUtils;
 import org.flowable.app.service.api.UserCache.CachedUser;
 import org.flowable.app.service.exception.NotFoundException;
+import org.flowable.app.service.mail.HtmlNotificationMailTemplate;
+import org.flowable.app.service.mail.NotificationEmail;
 import org.flowable.engine.common.api.FlowableException;
 import org.flowable.engine.history.HistoricIdentityLink;
 import org.flowable.engine.history.HistoricTaskInstance;
@@ -43,6 +45,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class FlowableTaskService extends FlowableAbstractTaskService {
+	
+	protected NotificationEmail notificationEmail=new NotificationEmail();
 
     private static final Logger logger = LoggerFactory.getLogger(FlowableTaskService.class);
 
@@ -113,6 +117,20 @@ public class FlowableTaskService extends FlowableAbstractTaskService {
 
         if (updated.isDueDateSet()) {
             task.setDueDate(updated.getDueDate());
+            
+            List<HistoricIdentityLink> idLinks = historyService.getHistoricIdentityLinksForTask(taskId);
+            List<UserRepresentation> result = new ArrayList<UserRepresentation>(idLinks.size());
+
+            for (HistoricIdentityLink link : idLinks) {
+                // Only include users and non-assignee links
+                if (link.getUserId() != null && !IdentityLinkType.ASSIGNEE.equals(link.getType())) {
+                    CachedUser cachedUser = userCache.getUser(link.getUserId());
+                    if (cachedUser != null && cachedUser.getUser() != null) {
+                        ////Se asigno una nueva tarea se debe notificar por correo a todos los involucrados
+                        notificationEmail.sendNotificationEmail(cachedUser.getUser().getEmail(),"asuarezr@monex.com.mx","alfred0823@hotmail.com",null,"Workflow-Se fijo una fecha de vencimiento para la tarea contratos",null,new HtmlNotificationMailTemplate().getNotificationTemplate(),"UTF-8",null);
+                    }
+                }
+            }
         }
 
         taskService.saveTask(task);
